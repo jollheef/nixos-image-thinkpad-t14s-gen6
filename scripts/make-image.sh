@@ -17,6 +17,7 @@ drive=$(losetup -P -f --show ${file})
 mkfs.vfat -F32 ${drive}p1
 mkfs.ext3 ${drive}p2
 
+mkdir -p /mnt
 mount ${drive}p2 /mnt
 mkdir /mnt/boot
 mount ${drive}p1 /mnt/boot
