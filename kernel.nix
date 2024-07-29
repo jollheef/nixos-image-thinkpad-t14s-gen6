@@ -25,7 +25,7 @@ let
 
   dtb = "${linuxPackages_x1e.kernel}/dtbs/qcom/x1e78100-lenovo-thinkpad-t14s.dtb";
   dtbHash = builtins.hashFile "md5" dtb;
-  dtbName = "x1e80100-${dtbHash}.dtb";
+  dtbName = "x1e78100-${dtbHash}.dtb";
 in {
   boot = {
     kernelPackages = linuxPackages_x1e;
