@@ -12,4 +12,5 @@ $(IMAGE):
 
 flash: $(IMAGE) $(TARGET)
 	sudo dd if=$(IMAGE) of=$(TARGET)
-	sudo parted -sf $(TARGET) p
+	sudo partprobe
+	sudo parted -sf $(TARGET) resizepart 2 100%
