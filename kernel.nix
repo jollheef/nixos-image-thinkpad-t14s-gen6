@@ -23,10 +23,14 @@ let
   linux_x1e = pkgs.callPackage linux_x1e_pkg { defconfig = "x1e_defconfig"; };
   linuxPackages_x1e = pkgs.recurseIntoAttrs (pkgs.linuxPackagesFor linux_x1e);
 
-  dtb = "${linuxPackages_x1e.kernel}/dtbs/qcom/x1e78100-lenovo-thinkpad-t14s.dtb";
-  dtbHash = builtins.hashFile "md5" dtb;
-  dtbName = "x1e78100-${dtbHash}.dtb";
 in {
+  hardware = {
+    deviceTree = {
+      enable = true;
+      name = "qcom/x1e78100-lenovo-thinkpad-t14s.dtb";
+    };
+  };
+
   boot = {
     kernelPackages = linuxPackages_x1e;
 
@@ -106,26 +110,6 @@ in {
     loader = {
       systemd-boot.enable = lib.mkForce true;
       efi.canTouchEfiVariables = false;
-      systemd-boot.extraFiles = {
-        "${dtbName}" = dtb;
-      };
     };
   };
-
-  system.activationScripts.t14s-gen6-dtb = ''
-    in_package="${dtb}"
-    esp_tool_folder="${efi.efiSysMountPoint}/"
-    in_esp="''${esp_tool_folder}${dtbName}"
-    in_esp_backup="''${esp_tool_folder}/dtb/${dtbName}"
-    in_esp_backup_dir="''${esp_tool_folder}/dtb/"
-    mkdir -p "$in_esp_backup_dir"
-    cp "$in_package" "$in_esp_backup"
-    >&2 echo "Ensuring $in_esp in EFI System Partition"
-    if ! ${pkgs.diffutils}/bin/cmp --silent "$in_package" "$in_esp"; then
-      >&2 echo "Copying $in_package -> $in_esp"
-      mkdir -p "$esp_tool_folder"
-      cp "$in_package" "$in_esp"
-      sync
-    fi
-  '';
 }
