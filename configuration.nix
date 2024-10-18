@@ -11,6 +11,7 @@
     pkgs.linux-firmware (pkgs.callPackage ./pkgs/t14s-firmware.nix { })
   ];
 
+  boot.loader.efi.canTouchEfiVariables = false;
   boot.loader.systemd-boot = {
     enable = true;
     extraFiles = {

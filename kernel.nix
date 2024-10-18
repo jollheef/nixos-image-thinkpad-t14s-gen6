@@ -106,10 +106,5 @@ in {
         enableTpm2 = false;
       };
     };
-
-    loader = {
-      systemd-boot.enable = lib.mkForce true;
-      efi.canTouchEfiVariables = false;
-    };
   };
 }
