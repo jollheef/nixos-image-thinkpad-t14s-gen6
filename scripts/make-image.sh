@@ -23,7 +23,7 @@ mkdir /mnt/boot
 mount ${drive}p1 /mnt/boot
 
 mkdir -p /mnt/etc/nixos
-cp -r pkgs *.nix /mnt/etc/nixos/
+cp -r patches pkgs *.nix /mnt/etc/nixos/
 nixos-install --root /mnt --no-root-password
 
 umount -R /mnt

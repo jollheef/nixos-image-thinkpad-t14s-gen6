@@ -1,26 +1,27 @@
 { config, lib, pkgs, ... }:
 
 let
-  inherit (config.boot.loader) efi;
-
   linux_x1e_pkg = { buildLinux, ... } @ args:
     buildLinux (args // rec {
-      version = "6.10.0";
-      modDirVersion = "6.10.0-next-20240725";
+      version = "6.12.0";
+      modDirVersion = "6.12.0-rc3";
 
-      src = pkgs.fetchFromGitLab {
-        domain = "git.codelinaro.org";
-        owner = "abel.vesa";
+      src = pkgs.fetchFromGitHub {
+        owner = "jhovold";
         repo = "linux";
-        rev = "x1e80100-20240725"; # "x1e80100-next";
-        hash = "sha256-0DFmPJEFl+cQT3Li4vuptBwavRc9CQOatd8TIYht+54=";
+        # wip/x1e80100-6.12-rc3
+        rev = "84318c8e3038f579070e7c5d109d1d2311a5f437";
+        hash = "sha256-kpuzjqcI4YGS+S9OvIUhm6z8xCGMA5h5+JlcHhoEETM=";
       };
       kernelPatches = (args.kernelPatches or [ ]);
 
-      extraMeta.branch = "6.10";
+      extraMeta.branch = "6.12";
     } // (args.argsOverride or { }));
 
-  linux_x1e = pkgs.callPackage linux_x1e_pkg { defconfig = "x1e_defconfig"; };
+  linux_x1e = pkgs.callPackage linux_x1e_pkg {
+    defconfig = "johan_defconfig";
+  };
+
   linuxPackages_x1e = pkgs.recurseIntoAttrs (pkgs.linuxPackagesFor linux_x1e);
 
 in {
@@ -34,42 +35,68 @@ in {
   boot = {
     kernelPackages = linuxPackages_x1e;
 
+    kernelPatches = [
+      {
+        name = "backlight";
+        patch = ./patches/backlight.patch;
+      }
+      {
+        name = "bluetooth";
+        patch = ./patches/bluetooth.patch;
+      }
+      {
+        name = "disable-type-c-dp";
+        patch = ./patches/disable-type-c-dp.patch;
+      }
+      {
+        name = "vmlinuz.efi";
+        patch = null;
+        extraStructuredConfig = with lib.kernel; {
+          EFI_ZBOOT = lib.mkForce no;
+        };
+      }
+      {
+        name = "disable-qr-code-panic-screen";
+        patch = null;
+        extraStructuredConfig = with lib.kernel; {
+          DRM_PANIC_SCREEN_QR_CODE = lib.mkForce no;
+        };
+      }
+      {
+        name = "disable-rust";
+        patch = null;
+        extraStructuredConfig = with lib.kernel; {
+          RUST = lib.mkForce no;
+        };
+      }
+    ];
+
     kernelParams = [
-      "dtb=${dtbName}"
-
-      #"initcall_debug"
-
-      #"earlycon=efifb"
-      "console=tty0"
-      #"ignore_loglevel"
-      #"keep_bootcon"
-
       "regulator_ignore_unused"
       "clk_ignore_unused"
       "pd_ignore_unused"
       "arm64.nopauth"
-      #"acpi=no"
       "efi=novamap"
-      #"efi=noruntime"
-
       "pcie_aspm.policy=powersupersave"
       "iommu.strict=0"
       "iommu.passthrough=0"
-
-      #"earlyprintk=xdbc"
-      #"usbcore.autosuspend=-1"
-      "module_blacklist=edac_core,qcom_q6v5_pas"
     ];
 
     supportedFilesystems.zfs = false;
 
     initrd = {
+      systemd = {
+        enable = true;
+        tpm2.enable = false;
+      };
+
       includeDefaultModules = false;
 
       availableKernelModules = [
         "nvme"
         "uas"
         "usb-storage"
+        "pcie-qcom"
 
         "gpio-sbu-mux"
         "leds-qcom-lpg"
@@ -100,11 +127,6 @@ in {
         # fat32
         "vfat" "nls-cp437" "nls-iso8859-1"
       ];
-
-      systemd = {
-        enable = true;
-        enableTpm2 = false;
-      };
     };
   };
 }
