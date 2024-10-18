@@ -48,6 +48,38 @@
 
   services.getty.autologinUser = lib.mkDefault "root";
 
+  nixpkgs.overlays = [
+    (final: prev: {
+      qrtr = prev.callPackage ./pkgs/qrtr.nix {};
+      qmic = prev.callPackage ./pkgs/qmic.nix {};
+      rmtfs = prev.callPackage ./pkgs/rmtfs.nix { inherit (final) qrtr qmic; };
+      pd-mapper = final.callPackage ./pkgs/pd-mapper.nix { inherit (final) qrtr; };
+    })
+  ];
+
+  systemd.services = {
+    pd-mapper = {
+      unitConfig = {
+        Requires = "qrtr-ns.service";
+        After = "qrtr-ns.service";
+      };
+      serviceConfig = {
+        Restart = "always";
+        ExecStart = "${pkgs.pd-mapper}/bin/pd-mapper";
+      };
+      wantedBy = [
+        "multi-user.target"
+      ];
+    };
+    qrtr-ns = {
+      serviceConfig = {
+        ExecStart = "${pkgs.qrtr}/bin/qrtr-ns -v -f 1";
+        Restart = "always";
+      };
+      wantedBy = ["multi-user.target"];
+    };
+  };
+
   nixpkgs.config.allowUnfree = true;
 
   nix.settings = {
