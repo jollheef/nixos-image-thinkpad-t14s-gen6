@@ -7,13 +7,13 @@
 
 stdenvNoCC.mkDerivation rec {
   pname = "linux-firmware";
-  version = "20240726";
+  version = "20241003";
 
   src = fetchFromGitHub {
     owner = "jollheef";
     repo = "linux-firmware-x1e78100-lenovo-thinkpad-t14s";
-    rev = "4ba0b781ffc27cb48736942822192b548a316838";
-    hash = "sha256-ZeV6JRxU1gMwtWZH8sePCrZXFa27GxoKpLK4sg3Ljyo=";
+    rev = "e3ba8bb550b023b9f8501360f1d85d74d3de96b4";
+    hash = "sha256-REkQpg+27to11VoDfAksvqzi5M7MDjAcAvR7P8cnRk0=";
   };
 
   installPhase = ''
